@@ -13,28 +13,28 @@ class VkUser:
     def __init__(self, user_id=0, token=0):
         self.counter = 0
         pars = {'access_token': token, 'v': VERSION, 'user_ids': [], 'fields': ['counters']}
-        data = self._get_response('https://api.vk.com/method/users.get', pars)
-        if not data:
+        response = self._get_response('https://api.vk.com/method/users.get', pars)
+        if not response:
             print("invalid token: {}".format(token))
-            exit(4)
+            exit(1)
         self.token = token
         pars = {'access_token': token, 'v': VERSION, 'user_ids': [user_id], 'fields': ['counters']}
-        data = self._get_response('https://api.vk.com/method/users.get', pars)
-        if not data:
+        response = self._get_response('https://api.vk.com/method/users.get', pars)
+        if not response:
             print("invalid user id: {}".format(user_id))
-            exit(5)
-        self.uid = data[0]['id']
-        self.name = data[0]['first_name'] + ' ' + data[0]['last_name']
+            exit(2)
+        self.uid = response[0]['id']
+        self.name = response[0]['first_name'] + ' ' + response[0]['last_name']
 
     def _get_response(self, url, par):
         try:
-            data = requests.get(url, par).json()['response']
+            response = requests.get(url, par).json()['response']
         except ConnectionError:
-            print("error: VK connection problem")
-            exit(1)
+            print("error: vk connection problem")
+            return {}
         except TimeoutError:
-            print("error: VK connection timeout")
-            exit(2)
+            print("error: vk connection timeout")
+            return {}
         except KeyError:
             return {}
         else:
@@ -43,7 +43,7 @@ class VkUser:
                 self.counter = 0
             else:
                 self.counter += 1
-            return data
+            return response
 
     def get_friends_list(self):
         pars = {'access_token': self.token, 'v': VERSION, 'user_id': self.uid, 'count': MAX_FRIENDS}
@@ -62,13 +62,13 @@ class VkUser:
         return friends_statuses
 
 
-def friend_online(data):
+def status_online(data):
     return data['online']
 
 
 def get_online_friends(api):
     friends = api.get_friends_list()
-    online_friends_data = list(filter(friend_online, api.get_friends_statuses(friends)))
+    online_friends_data = list(filter(status_online, api.get_friends_statuses(friends)))
     return [friend['first_name'] + " " + friend['last_name'] for friend in online_friends_data]
 
 
@@ -80,7 +80,7 @@ def main(api):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='This program shows friends online of the given VK user')
     ap.add_argument("--user", dest="user", action="store", required=True, help="  user id or short 'screen name'")
-    ap.add_argument("--token", dest="token", action="store", required=True, help="  VK API access token")
+    ap.add_argument("--token", dest="token", action="store", required=True, help="  vk api access token")
 
     args = ap.parse_args(sys.argv[1:])
 

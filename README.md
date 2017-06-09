@@ -1,6 +1,6 @@
 # Watcher of Friends Online
 
-This program shows friends online of the given VK user
+vk_friends_online shows user friends who are online in vk
 
 usage: 
 ------
