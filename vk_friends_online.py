@@ -3,8 +3,6 @@ import time
 import sys
 import argparse
 
-# from pprint import pprint
-
 VERSION = '5.65'  # VK API Version
 MAX_FRIENDS = 1000  # Max number of friends to analyse
 VK_TIMEOUT = 1.01  # Time in secs to pause when limit of requests is reached
@@ -12,7 +10,7 @@ VK_REQ_LIMIT = 3  # Max number of requests to VK API per second
 
 
 class VkUser:
-    def __init__(self, userid=0, token=0):
+    def __init__(self, user_id=0, token=0):
         self.counter = 0
         pars = {'access_token': token, 'v': VERSION, 'user_ids': [], 'fields': ['counters']}
         data = self._get_response('https://api.vk.com/method/users.get', pars)
@@ -20,10 +18,10 @@ class VkUser:
             print("invalid token: {}".format(token))
             exit(4)
         self.token = token
-        pars = {'access_token': token, 'v': VERSION, 'user_ids': [userid], 'fields': ['counters']}
+        pars = {'access_token': token, 'v': VERSION, 'user_ids': [user_id], 'fields': ['counters']}
         data = self._get_response('https://api.vk.com/method/users.get', pars)
         if not data:
-            print("invalid user id: {}".format(userid))
+            print("invalid user id: {}".format(user_id))
             exit(5)
         self.uid = data[0]['id']
         self.name = data[0]['first_name'] + ' ' + data[0]['last_name']
@@ -57,30 +55,26 @@ class VkUser:
     def get_main_user_name(self):
         return self.name
 
-    def get_users_status(self, users_ids):
+    def get_friends_statuses(self, users_ids):
         pars = {'access_token': self.token, 'v': VERSION, 'user_ids': "[{}]".format(",".join(map(str, users_ids))),
                 'fields': ['online']}
-        users_statuses = self._get_response('https://api.vk.com/method/users.get', pars)
-        return users_statuses
+        friends_statuses = self._get_response('https://api.vk.com/method/users.get', pars)
+        return friends_statuses
 
 
-def online_user(user_data):
-    return user_data['online']
+def friend_online(data):
+    return data['online']
 
 
-def get_online_friends(vkapi):
-    friends = vkapi.get_friends_list()
-    online_users_data = list(filter(online_user, vkapi.get_users_status(friends)))
-    return [user['first_name'] + " " + user['last_name'] for user in online_users_data]
+def get_online_friends(api):
+    friends = api.get_friends_list()
+    online_friends_data = list(filter(friend_online, api.get_friends_statuses(friends)))
+    return [friend['first_name'] + " " + friend['last_name'] for friend in online_friends_data]
 
 
-def output_friends_to_console(username, friends_online):
-    print("\n{} has the following friends online: {}".format(username, ", ".join(friends_online)))
-
-
-def main(vkapi):
-    friends_online = get_online_friends(vkapi)
-    output_friends_to_console(vkapi.get_main_user_name(), friends_online)
+def main(api):
+    friends_online = get_online_friends(api)
+    print("\n{} has the following friends online: {}".format(api.get_main_user_name(), ", ".join(friends_online)))
 
 
 if __name__ == '__main__':
@@ -90,4 +84,4 @@ if __name__ == '__main__':
 
     args = ap.parse_args(sys.argv[1:])
 
-    main(VkUser(userid=args.user, token=args.token))
+    main(VkUser(user_id=args.user, token=args.token))
