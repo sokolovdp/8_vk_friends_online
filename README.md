@@ -15,7 +15,7 @@ Arguments:
 sample output:
 --------------
 ```
-Катерина Ходакова has the following friends online: Иван Асютин, Ольга Теплова
+friends online: Иван Асютин, Ольга Теплова
 ```
 how to get vk api token:
 ------------------------
