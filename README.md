@@ -17,6 +17,27 @@ sample output:
 ```
 Катерина Ходакова has the following friends online: Иван Асютин, Ольга Теплова
 ```
+how to get vk api token:
+------------------------
+Documentation: https://vk.com/dev/oauth_gettoken
+
+API_ID you can get in your private cabinet, section - Managed Apps
+
+Sample Python code to get API token:
+```
+AUTHORIZE_URL = 'https://oauth.vk.com/authorize'
+APP_ID = 1234567  # Your application ID
+auth_data = {
+    'client_id': APP_ID,
+    'display': 'mobile',
+    'response_type': 'token',
+    'scope': 'friends', 'status'
+    'v': '5.65',
+}
+token_url = '?'.join((AUTHORIZE_URL, urlencode(auth_data)))
+print(token_url)
+```
+
 # Project Goals
 
 The code is written for educational purposes. Training course for web-developers - [DEVMAN.org](https://devman.org)
