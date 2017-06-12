@@ -8,13 +8,10 @@ def get_response(url, par):
         response = requests.get(url, par).json()['response']
     except ConnectionError:
         print("error: vk connection problem")
-        exit(1)
     except TimeoutError:
         print("error: vk connection timeout")
-        exit(2)
     except KeyError:
         print("response error, check user id and token values")
-        exit(3)
     else:
         return response
 
@@ -37,13 +34,15 @@ def friend_is_online(friend_data):
 
 def get_online_friends(user_id, api_token):
     friends = get_friends_list(user_id, api_token)
-    return list(filter(friend_is_online, get_friends_statuses(api_token, friends)))
+    if friends:
+        return list(filter(friend_is_online, get_friends_statuses(api_token, friends)))
 
 
 def main(user_id, api_token):
     friends_online = get_online_friends(user_id, api_token)
-    names_of_online_friends = [friend['first_name'] + ' ' + friend['last_name'] for friend in friends_online]
-    print("friends online: {}".format(', '.join(names_of_online_friends)))
+    if friends_online:
+        names_of_online_friends = [friend['first_name'] + ' ' + friend['last_name'] for friend in friends_online]
+        print("friends online: {}".format(', '.join(names_of_online_friends)))
 
 
 if __name__ == '__main__':
