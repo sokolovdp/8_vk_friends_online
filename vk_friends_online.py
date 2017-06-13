@@ -3,29 +3,47 @@ import argparse
 import requests
 
 
+class Response:
+    def __init__(self, data, err):
+        self.data = data
+        self.err = err
+        self.ok = err is None
+
+
 def get_response(url, par):
     try:
-        response = requests.get(url, par).json()['response']
+        data = requests.get(url, par).json()['response']
+        return Response(data, None)
     except ConnectionError:
-        print("error: vk connection problem")
+        return Response(None, "error: vk connection problem")
     except TimeoutError:
-        print("error: vk connection timeout")
+        return Response(None, "error: vk connection timeout")
     except KeyError:
-        print("response error, check user id and token values")
-    else:
-        return response
+        return Response(None, "key error, check user id and token ")
+    except Exception:
+        return Response(None, "unknown error")
 
 
 def get_friends_list(user_id, token):
     max_friends = 1000
     parameters = {'access_token': token, 'v': '5.65', 'user_id': user_id, 'count': max_friends}
-    return get_response('https://api.vk.com/method/friends.get', parameters)['items']
+    response = get_response('https://api.vk.com/method/friends.get', parameters)
+    if response.ok:
+        return response.data['items']
+    else:
+        print("can't load user {} friend list, error {}".format(user_id, response.err))
+        exit()
 
 
 def get_friends_statuses(token, users_ids):
     parameters = {'access_token': token, 'v': '5.65', 'user_ids': "[{}]".format(",".join(map(str, users_ids))),
                   'fields': ['online']}
-    return get_response('https://api.vk.com/method/users.get', parameters)
+    response = get_response('https://api.vk.com/method/users.get', parameters)
+    if response.ok:
+        return response.data
+    else:
+        print("can't load user friend's statuses, error {}".format(response.err))
+        exit()
 
 
 def friend_is_online(friend_data):
@@ -46,7 +64,7 @@ def main(user_id, api_token):
 
 
 if __name__ == '__main__':
-    ap = argparse.ArgumentParser(description='This program shows friends online of the VK user')
+    ap = argparse.ArgumentParser(description='shows friends online of the vk user')
     ap.add_argument("--user", dest="user", action="store", required=True, help="  user id or short 'screen name'")
     ap.add_argument("--token", dest="token", action="store", required=True, help="  vk api access token")
     args = ap.parse_args(sys.argv[1:])
