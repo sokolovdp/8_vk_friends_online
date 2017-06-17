@@ -3,8 +3,8 @@ import argparse
 import requests
 
 
-def make_response(data, error):
-    return {'data': data, 'err': error, 'ok': error is None}
+def make_response(response_data, error):
+    return {'data': response_data, 'err': error, 'ok': error is None}
 
 
 def get_response(url, par):
