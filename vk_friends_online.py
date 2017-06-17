@@ -9,8 +9,8 @@ def make_response(response_data, error):
 
 def get_response(url, par):
     try:
-        data = requests.get(url, par).json()['response']
-        return make_response(data, None)
+        response = requests.get(url, par).json()['response']
+        return make_response(response, None)
     except ConnectionError:
         return make_response(None, "error: vk connection problem")
     except TimeoutError:
