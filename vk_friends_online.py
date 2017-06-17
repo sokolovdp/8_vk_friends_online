@@ -3,35 +3,32 @@ import argparse
 import requests
 
 
-class Response:
-    def __init__(self, data, err):
-        self.data = data
-        self.err = err
-        self.ok = err is None
+def make_response(data, error):
+    return {'data': data, 'err': error, 'ok': error is None}
 
 
 def get_response(url, par):
     try:
         data = requests.get(url, par).json()['response']
-        return Response(data, None)
+        return make_response(data, None)
     except ConnectionError:
-        return Response(None, "error: vk connection problem")
+        return make_response(None, "error: vk connection problem")
     except TimeoutError:
-        return Response(None, "error: vk connection timeout")
+        return make_response(None, "error: vk connection timeout")
     except KeyError:
-        return Response(None, "key error, check user id and token ")
+        return make_response(None, "key error, check user id and token ")
     except Exception:
-        return Response(None, "unknown error")
+        return make_response(None, "unknown error")
 
 
 def get_friends_list(user_id, token):
     max_friends = 1000
     parameters = {'access_token': token, 'v': '5.65', 'user_id': user_id, 'count': max_friends}
     response = get_response('https://api.vk.com/method/friends.get', parameters)
-    if response.ok:
-        return response.data['items']
+    if response['ok']:
+        return response['data']['items']
     else:
-        print("can't load user {} friend list, error {}".format(user_id, response.err))
+        print("can't load user {} friend list, error {}".format(user_id, response['err']))
         exit()
 
 
@@ -39,10 +36,10 @@ def get_friends_statuses(token, users_ids):
     parameters = {'access_token': token, 'v': '5.65', 'user_ids': "[{}]".format(",".join(map(str, users_ids))),
                   'fields': ['online']}
     response = get_response('https://api.vk.com/method/users.get', parameters)
-    if response.ok:
-        return response.data
+    if response['ok']:
+        return response['data']
     else:
-        print("can't load user friend's statuses, error {}".format(response.err))
+        print("can't load user friend's statuses, error {}".format(response['err']))
         exit()
 
 
