@@ -2,55 +2,50 @@ import sys
 import argparse
 import requests
 
+vk_api_friends = 'https://api.vk.com/method/friends.get'
+vk_api_users = 'https://api.vk.com/method/users.get'
+MAX_FRIENDS = 1000
 
-def make_response(response_data, error):
+
+def make_response(response_data=None, error=None):
     return {'data': response_data, 'err': error, 'ok': error is None}
 
 
 def get_response(url, par):
     try:
         response = requests.get(url, par).json()['response']
-        return make_response(response, None)
+        return make_response(response_data=response)
     except ConnectionError:
-        return make_response(None, "error: vk connection problem")
+        return make_response(error="error: vk connection problem")
     except TimeoutError:
-        return make_response(None, "error: vk connection timeout")
+        return make_response(error="error: vk connection timeout")
     except KeyError:
-        return make_response(None, "key error, check user id and token ")
-    except Exception:
-        return make_response(None, "unknown error")
+        return make_response(error="key error, check user id and token ")
 
 
 def get_friends_list(user_id, token):
-    max_friends = 1000
-    parameters = {'access_token': token, 'v': '5.65', 'user_id': user_id, 'count': max_friends}
-    response = get_response('https://api.vk.com/method/friends.get', parameters)
+    parameters = {'access_token': token, 'v': '5.65', 'user_id': user_id, 'count': MAX_FRIENDS}
+    response = get_response(vk_api_friends, parameters)
     if response['ok']:
         return response['data']['items']
     else:
         print("can't load user {} friend list, error {}".format(user_id, response['err']))
-        exit()
 
 
 def get_friends_statuses(token, users_ids):
     parameters = {'access_token': token, 'v': '5.65', 'user_ids': "[{}]".format(",".join(map(str, users_ids))),
                   'fields': ['online']}
-    response = get_response('https://api.vk.com/method/users.get', parameters)
+    response = get_response(vk_api_users, parameters)
     if response['ok']:
         return response['data']
     else:
         print("can't load user friend's statuses, error {}".format(response['err']))
-        exit()
-
-
-def friend_is_online(friend_data):
-    return friend_data['online']
 
 
 def get_online_friends(user_id, api_token):
     friends = get_friends_list(user_id, api_token)
     if friends:
-        return list(filter(friend_is_online, get_friends_statuses(api_token, friends)))
+        return [friend for friend in get_friends_statuses(api_token, friends) if friend['online']]
 
 
 def main(user_id, api_token):
